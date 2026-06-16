@@ -4,6 +4,7 @@ export default defineConfig({
   title: '我的技术成长记录',
   description: '记录学习与成长的每一步',
   lang: 'zh-CN',
+  base: '/personwork/',
 
   head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
 
@@ -30,7 +31,7 @@ export default defineConfig({
 
     // 社交链接
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/' },
+      { icon: 'github', link: 'https://github.com/kunbean' },
     ],
 
     // 页脚

@@ -27,6 +27,10 @@ export default defineConfig({
           items: [
             { text: '使用 VitePress 搭建个人博客', link: '/posts/hello-world' },
             { text: 'JavaScript 闭包详解', link: '/posts/js-closure' },
+            { text: '测试', link: '/posts/%E6%B5%8B%E8%AF%95' },
+            { text: '测试文件夹', link: '/posts/%E6%B5%8B%E8%AF%95%E6%96%87%E4%BB%B6%E5%A4%B9' },
+            { text: '数据产品在Ai场景下具备的能力', link: '/posts/%E6%95%B0%E6%8D%AE%E4%BA%A7%E5%93%81%E5%9C%A8Ai%E5%9C%BA%E6%99%AF%E4%B8%8B%E5%85%B7%E5%A4%87%E7%9A%84%E8%83%BD%E5%8A%9B' },
+            // AUTO_POSTS_END  // 新文章自动追加到此标记上方
           ],
         },
       ],

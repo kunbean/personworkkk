@@ -380,6 +380,100 @@ function toBase64(str) {
   return btoa(bin)
 }
 
+async function updatePostsIndex(newFileName) {
+  try {
+    const indexPath = `${POSTS_DIR}/index.md`
+    const res = await fetch(`${BASE}/repos/${OWNER}/${REPO}/contents/${indexPath}`, {
+      headers: { Authorization: `token ${token.value}`, Accept: 'application/vnd.github.v3+json' },
+    })
+    if (!res.ok) return
+    const data = await res.json()
+    const bytes = Uint8Array.from(atob(data.content), c => c.charCodeAt(0))
+    const raw = new TextDecoder().decode(bytes)
+
+    // 提取文件名（去掉 .md）作为显示名和链接
+    const displayName = newFileName.replace(/\.md$/, '')
+    const newLink = `- **[${displayName}](/posts/${encodeURIComponent(displayName)})**`
+
+    // 在当前月份区块插入新链接，或新建月份区块
+    const now = new Date()
+    const yearMonth = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月`
+    const monthHeader = `## ${yearMonth}`
+    let updated
+
+    if (raw.includes(monthHeader)) {
+      // 在该月份区块末尾追加
+      updated = raw.replace(monthHeader, `${monthHeader}\n${newLink}`)
+    } else {
+      // 新建月份区块（在第一个 ## 之前插入）
+      const firstH2 = raw.indexOf('\n## ')
+      if (firstH2 !== -1) {
+        updated = raw.slice(0, firstH2) + `\n## ${yearMonth}\n\n${newLink}\n` + raw.slice(firstH2)
+      } else {
+        updated = raw + `\n## ${yearMonth}\n\n${newLink}\n`
+      }
+    }
+
+    // 同时更新侧边栏配置
+    await updateSidebarConfig(displayName, newFileName)
+
+    await api(`/repos/${OWNER}/${REPO}/contents/${indexPath}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message: `更新文章列表: 添加 ${displayName}`,
+        content: toBase64(updated),
+        sha: data.sha,
+      }),
+    })
+  } catch (e) {
+    console.error('更新文章列表失败:', e)
+  }
+}
+
+async function updateSidebarConfig(displayName, fileName) {
+  try {
+    const configPath = 'docs/.vitepress/config.mts'
+    const res = await fetch(`${BASE}/repos/${OWNER}/${REPO}/contents/${configPath}`, {
+      headers: { Authorization: `token ${token.value}`, Accept: 'application/vnd.github.v3+json' },
+    })
+    if (!res.ok) return
+    const data = await res.json()
+    const bytes = Uint8Array.from(atob(data.content), c => c.charCodeAt(0))
+    const raw = new TextDecoder().decode(bytes)
+
+    const linkLine = `{ text: '${displayName}', link: '/posts/${encodeURIComponent(fileName.replace(/\.md$/, ''))}' },`
+    const marker = "// AUTO_POSTS_END"
+    let updated
+
+    if (raw.includes(marker)) {
+      updated = raw.replace(marker, `${linkLine}\n            ${marker}`)
+    } else {
+      // 在 sidebar items 数组末尾插入 marker 和新链接
+      const sidebarMatch = raw.match(/(\/posts\/.*?items:\s*\[)([\s\S]*?)(\])/)
+      if (sidebarMatch) {
+        // 在最后一个 item 之后插入
+        updated = raw.replace(
+          /({ text: 'JavaScript 闭包详解'.*?},)/,
+          `$1\n            ${linkLine}\n            // AUTO_POSTS_END  // 新文章自动追加到此标记上方`
+        )
+      }
+    }
+
+    if (updated && updated !== raw) {
+      await api(`/repos/${OWNER}/${REPO}/contents/${configPath}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          message: `更新侧边栏: 添加 ${displayName}`,
+          content: toBase64(updated),
+          sha: data.sha,
+        }),
+      })
+    }
+  } catch (e) {
+    console.error('更新侧边栏失败:', e)
+  }
+}
+
 async function publish() {
   if (!title.value.trim()) { alert('请填写文章标题'); return }
   publishing.value = true; publishResult.value = null
@@ -396,6 +490,8 @@ async function publish() {
     publishResult.value = { type: 'success', text: `发布成功！「${name}」约 1 分钟后更新到网站。` }
     if (selectedPost.value === '__new__') {
       selectedPost.value = name
+      // 更新文章列表页
+      await updatePostsIndex(name)
       // 延迟一点等 GitHub API 刷新
       setTimeout(async () => { await loadPosts() }, 500)
     }

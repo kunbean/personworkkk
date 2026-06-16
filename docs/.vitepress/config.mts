@@ -14,6 +14,8 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: '文章', link: '/posts/' },
       { text: '写文章', link: '/editor' },
+      { text: '简历', link: '/resume' },
+      { text: '文档', link: '/guide/' },
       { text: '关于', link: '/about' },
     ],
 
@@ -25,6 +27,19 @@ export default defineConfig({
           items: [
             { text: '使用 VitePress 搭建个人博客', link: '/posts/hello-world' },
             { text: 'JavaScript 闭包详解', link: '/posts/js-closure' },
+          ],
+        },
+      ],
+      '/guide/': [
+        {
+          text: '技术文档',
+          items: [
+            { text: '项目概述', link: '/guide/' },
+            { text: '架构说明', link: '/guide/architecture' },
+            { text: '在线编辑器', link: '/guide/editor' },
+            { text: '主题定制', link: '/guide/theme' },
+            { text: '部署流程', link: '/guide/deploy' },
+            { text: '更新日志', link: '/guide/changelog' },
           ],
         },
       ],

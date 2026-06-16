@@ -285,16 +285,37 @@ const renderedContent = computed(() => {
 })
 
 // ---- API ----
+const HTTP_ERRORS = {
+  401: 'Token 无效或已过期，请重新生成',
+  403: '权限不足，请确认 Token 具有 repo 权限',
+  404: '仓库或文件不存在，请检查仓库名称',
+  409: '文件已被其他人修改，请刷新后重试',
+  422: '请求数据格式错误',
+}
+
 async function api(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, {
     headers: { Authorization: `token ${token.value}`, Accept: 'application/vnd.github.v3+json', ...opts.headers },
     ...opts,
   })
-  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || `HTTP ${res.status}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const detail = HTTP_ERRORS[res.status] || body.message || `HTTP ${res.status}`
+    throw new Error(detail)
+  }
   return res.json()
 }
+
 async function getSha(filePath) {
-  try { return (await api(`/repos/${OWNER}/${REPO}/contents/${filePath}`)).sha } catch { return null }
+  const res = await fetch(`${BASE}/repos/${OWNER}/${REPO}/contents/${filePath}`, {
+    headers: { Authorization: `token ${token.value}`, Accept: 'application/vnd.github.v3+json' },
+  })
+  if (res.status === 404) return null  // 文件不存在是正常情况
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(HTTP_ERRORS[res.status] || body.message || `HTTP ${res.status}`)
+  }
+  return (await res.json()).sha
 }
 
 // ---- Token ----
@@ -322,22 +343,34 @@ async function loadPost() {
   }
   try {
     const file = await api(`/repos/${OWNER}/${REPO}/contents/${POSTS_DIR}/${selectedPost.value}`)
-    const raw = atob(file.content)
+    // 正确的 UTF-8 Base64 解码
+    const bytes = Uint8Array.from(atob(file.content), c => c.charCodeAt(0))
+    const raw = new TextDecoder().decode(bytes)
     const m = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
     if (m) {
       content.value = m[2]; const fm = m[1]
       const t = fm.match(/title:\s*["']?(.+?)["']?\s*$/); if (t) title.value = t[1]
       const d = fm.match(/date:\s*["']?(.+?)["']?\s*$/); if (d) date.value = d[1]
-      const g = fm.match(/tags:\s*\[?(.+?)\]?\s*$/); if (g) tags.value = g[1]
+      // 支持 tags: ["a", "b"] 和 tags: a, b 两种格式
+      const gMatch = fm.match(/tags:\s*\[(.+?)\]\s*$/)
+      if (gMatch) {
+        tags.value = gMatch[1].split(',').map(t => t.trim().replace(/["']/g, '')).join(', ')
+      } else {
+        const g = fm.match(/tags:\s*(.+?)\s*$/); if (g) tags.value = g[1]
+      }
     } else {
       content.value = raw
       const h = raw.match(/^#\s+(.+)$/m); if (h) title.value = h[1]
     }
-  } catch (e) { alert('加载失败: ' + e.message) }
+  } catch (e) {
+    title.value = ''; date.value = new Date().toISOString().split('T')[0]; tags.value = ''; content.value = ''
+    alert('加载失败: ' + e.message)
+  }
 }
 
 function buildMarkdown() {
-  const tagStr = tags.value.split(/[,，]/).map(t => t.trim()).filter(Boolean).join(', ')
+  const tagList = tags.value.split(/[,，]/).map(t => t.trim()).filter(Boolean)
+  const tagStr = tagList.map(t => `"${t}"`).join(', ')
   return ['---', `title: "${title.value || '无标题'}"`, `date: ${date.value}`, `tags: [${tagStr}]`, '---', '', content.value].join('\n')
 }
 
@@ -377,19 +410,41 @@ async function deletePost() {
   if (!confirm(`确认删除「${selectedPost.value}」？不可恢复。`)) return
   try {
     const path = `${POSTS_DIR}/${selectedPost.value}`; const sha = await getSha(path)
+    if (!sha) { alert('无法获取文件信息，请检查 Token 是否有效'); return }
     await api(`/repos/${OWNER}/${REPO}/contents/${path}`, { method: 'DELETE', body: JSON.stringify({ message: `Delete: ${selectedPost.value}`, sha }) })
     publishResult.value = { type: 'success', text: `已删除「${selectedPost.value}」` }
-    selectedPost.value = '__new__'; title.value = ''; content.value = ''; await loadPosts()
+    selectedPost.value = '__new__'; title.value = ''; date.value = new Date().toISOString().split('T')[0]; tags.value = ''; content.value = ''; await loadPosts()
   } catch (e) { alert('删除失败: ' + e.message) }
 }
 
 function syncScroll() {
   if (!editorRef.value || !previewRef.value) return
-  const r = editorRef.value.scrollTop / (editorRef.value.scrollHeight - editorRef.value.clientHeight)
-  previewRef.value.scrollTop = r * (previewRef.value.scrollHeight - previewRef.value.clientHeight)
+  const edRange = editorRef.value.scrollHeight - editorRef.value.clientHeight
+  const pvRange = previewRef.value.scrollHeight - previewRef.value.clientHeight
+  if (edRange <= 0 || pvRange <= 0) return
+  const r = editorRef.value.scrollTop / edRange
+  previewRef.value.scrollTop = r * pvRange
 }
 
-onMounted(() => { if (token.value) loadPosts() })
+async function validateToken() {
+  try {
+    await api(`/repos/${OWNER}/${REPO}`)
+    return true
+  } catch (e) {
+    // Token 失效，清除并返回设置页
+    localStorage.removeItem('gh_blog_token')
+    token.value = ''
+    alert('Token 已失效，请重新设置')
+    return false
+  }
+}
+
+onMounted(async () => {
+  if (token.value) {
+    const valid = await validateToken()
+    if (valid) await loadPosts()
+  }
+})
 </script>
 
 <style scoped>

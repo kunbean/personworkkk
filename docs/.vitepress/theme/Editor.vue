@@ -122,10 +122,17 @@
         </div>
       </div>
 
+      <!-- 发布结果提示 (醒目) -->
+      <div v-if="publishResult" :class="['publish-toast', publishResult.type]">
+        <span class="toast-icon">{{ publishResult.type === 'success' ? '&#10003;' : publishResult.type === 'error' ? '&#10007;' : '' }}</span>
+        <span>{{ publishResult.text }}</span>
+        <button @click="publishResult = null" class="toast-close">&times;</button>
+      </div>
+
       <!-- 状态条 -->
       <div class="statusbar">
-        <span v-if="saveStatus" :class="['status', saveStatus.type]">{{ saveStatus.text }}</span>
-        <span v-else class="status dim">点击工具栏按钮即可插入格式，选中文字再点按钮可包裹格式</span>
+        <span v-if="publishing" class="status info">提交中...</span>
+        <span v-else class="status dim">点击工具栏按钮插入格式，选中文字后点按钮可包裹格式</span>
       </div>
     </div>
   </div>
@@ -153,7 +160,7 @@ const title = ref('')
 const date = ref(new Date().toISOString().split('T')[0])
 const tags = ref('')
 const content = ref('')
-const saveStatus = ref(null)
+const publishResult = ref(null)
 const publishing = ref(false)
 const editorRef = ref(null)
 const previewRef = ref(null)
@@ -334,24 +341,35 @@ function buildMarkdown() {
   return ['---', `title: "${title.value || '无标题'}"`, `date: ${date.value}`, `tags: [${tagStr}]`, '---', '', content.value].join('\n')
 }
 
+function toBase64(str) {
+  const bytes = new TextEncoder().encode(str)
+  const bin = Array.from(bytes, (b) => String.fromCodePoint(b)).join('')
+  return btoa(bin)
+}
+
 async function publish() {
   if (!title.value.trim()) { alert('请填写文章标题'); return }
-  publishing.value = true; saveStatus.value = { type: 'info', text: '提交中...' }
+  publishing.value = true; publishResult.value = null
   try {
     let name = selectedPost.value === '__new__'
       ? (newFileName.value.trim().replace(/\.md$/, '') || 'untitled') + '.md'
       : selectedPost.value
-    const path = `${POSTS_DIR}/${name}`; const sha = await getSha(path)
-    await api(`/repos/${OWNER}/${REPO}/contents/${path}`, {
+    const filePath = `${POSTS_DIR}/${name}`; const sha = await getSha(filePath)
+    const markdown = buildMarkdown()
+    await api(`/repos/${OWNER}/${REPO}/contents/${filePath}`, {
       method: 'PUT',
-      body: JSON.stringify({ message: `Update: ${title.value}`, content: btoa(unescape(encodeURIComponent(buildMarkdown()))), ...(sha ? { sha } : {}) }),
+      body: JSON.stringify({ message: `Update: ${title.value}`, content: toBase64(markdown), ...(sha ? { sha } : {}) }),
     })
-    saveStatus.value = { type: 'success', text: '已发布，约 1 分钟后上线' }
-    if (selectedPost.value === '__new__') { selectedPost.value = name; await loadPosts() }
+    publishResult.value = { type: 'success', text: `发布成功！「${name}」约 1 分钟后更新到网站。` }
+    if (selectedPost.value === '__new__') {
+      selectedPost.value = name
+      // 延迟一点等 GitHub API 刷新
+      setTimeout(async () => { await loadPosts() }, 500)
+    }
   } catch (e) {
-    saveStatus.value = { type: 'error', text: '发布失败: ' + e.message }
+    publishResult.value = { type: 'error', text: `发布失败：${e.message}` }
   } finally {
-    publishing.value = false; setTimeout(() => saveStatus.value = null, 4000)
+    publishing.value = false
   }
 }
 
@@ -360,7 +378,7 @@ async function deletePost() {
   try {
     const path = `${POSTS_DIR}/${selectedPost.value}`; const sha = await getSha(path)
     await api(`/repos/${OWNER}/${REPO}/contents/${path}`, { method: 'DELETE', body: JSON.stringify({ message: `Delete: ${selectedPost.value}`, sha }) })
-    saveStatus.value = { type: 'success', text: '已删除' }
+    publishResult.value = { type: 'success', text: `已删除「${selectedPost.value}」` }
     selectedPost.value = '__new__'; title.value = ''; content.value = ''; await loadPosts()
   } catch (e) { alert('删除失败: ' + e.message) }
 }
@@ -517,12 +535,30 @@ onMounted(() => { if (token.value) loadPosts() })
 .preview-body :deep(td) { padding: 8px 12px; border: 1px solid var(--border); }
 .preview-body :deep(a) { color: #7c3aed; }
 
+/* 发布结果 Toast */
+.publish-toast {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  border-radius: var(--radius); margin-bottom: 10px; font-size: 14px; font-weight: 600;
+  animation: slideIn 0.3s ease;
+}
+.publish-toast.success {
+  background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46;
+}
+.publish-toast.error {
+  background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
+}
+.toast-icon { font-size: 16px; font-weight: 700; }
+.toast-close {
+  margin-left: auto; background: none; border: none; font-size: 20px;
+  cursor: pointer; color: inherit; opacity: 0.6; padding: 0 4px; line-height: 1;
+}
+.toast-close:hover { opacity: 1; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
 /* 状态栏 */
 .statusbar { padding: 6px 0 0; font-size: 12px; }
 .status.dim { color: var(--text-muted); }
 .status.info { color: #6d28d9; }
-.status.success { color: var(--success); font-weight: 600; }
-.status.error { color: var(--danger); font-weight: 600; }
 
 @media (max-width: 768px) {
   .split-pane { grid-template-columns: 1fr; height: auto; }

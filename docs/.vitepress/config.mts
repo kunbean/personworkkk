@@ -4,7 +4,7 @@ export default defineConfig({
   title: '我的技术成长记录',
   description: '记录学习与成长的每一步',
   lang: 'zh-CN',
-  base: '/personwork/',
+  base: '/personwork-/',
 
   head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
 

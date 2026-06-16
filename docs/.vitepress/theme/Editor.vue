@@ -40,11 +40,16 @@
       <!-- 顶栏 -->
       <header class="topbar">
         <div class="topbar-left">
+          <!-- 模式切换 -->
+          <div class="mode-switch">
+            <button :class="{ active: editMode === 'posts' }" @click="switchMode('posts')">文章</button>
+            <button :class="{ active: editMode === 'guide' }" @click="switchMode('guide')">文档</button>
+          </div>
           <select v-model="selectedPost" @change="loadPost" class="post-select">
-            <option value="__new__">+ 新建文章</option>
+            <option value="__new__">+ 新建{{ editMode === 'posts' ? '文章' : '文档' }}</option>
             <option v-for="p in posts" :key="p.name" :value="p.name">{{ p.name.replace('.md', '') }}</option>
           </select>
-          <input v-if="selectedPost === '__new__'" v-model="newFileName" placeholder="文件名，如 2024-03-15-react-notes" class="filename-input" />
+          <input v-if="selectedPost === '__new__'" v-model="newFileName" :placeholder="editMode === 'posts' ? '文件名，如 2024-03-15-react-notes' : '文件名，如 deploy'" class="filename-input" />
         </div>
         <div class="topbar-right">
           <button @click="publish" :disabled="publishing" class="publish-btn">{{ publishing ? '发布中...' : '发布' }}</button>
@@ -147,8 +152,10 @@ marked.setOptions({ breaks: true, gfm: true })
 const OWNER = 'kunbean'
 const REPO = 'personworkkk'
 const BASE = 'https://api.github.com'
-const POSTS_DIR = 'docs/posts'
 const tokenUrl = `https://github.com/settings/tokens/new?scopes=repo&description=BlogEditor`
+
+const editMode = ref('posts')
+const contentDir = computed(() => editMode.value === 'posts' ? 'docs/posts' : 'docs/guide')
 
 const token = ref(localStorage.getItem('gh_blog_token') || '')
 const tokenInput = ref('')
@@ -318,6 +325,15 @@ async function getSha(filePath) {
   return (await res.json()).sha
 }
 
+// ---- 模式切换 ----
+async function switchMode(mode) {
+  if (editMode.value === mode) return
+  editMode.value = mode
+  selectedPost.value = '__new__'
+  title.value = ''; date.value = new Date().toISOString().split('T')[0]; tags.value = ''; content.value = ''; newFileName.value = ''
+  await loadPosts()
+}
+
 // ---- Token ----
 function saveToken() {
   if (!tokenInput.value.trim()) return
@@ -331,7 +347,7 @@ function updateToken() { saveToken(); showSettings.value = false }
 // ---- 文章 ----
 async function loadPosts() {
   try {
-    const files = await api(`/repos/${OWNER}/${REPO}/contents/${POSTS_DIR}`)
+    const files = await api(`/repos/${OWNER}/${REPO}/contents/${contentDir.value}`)
     posts.value = files.filter(f => f.name.endsWith('.md') && f.name !== 'index.md').sort((a, b) => b.name.localeCompare(a.name))
   } catch { posts.value = [] }
 }
@@ -342,7 +358,7 @@ async function loadPost() {
     return
   }
   try {
-    const file = await api(`/repos/${OWNER}/${REPO}/contents/${POSTS_DIR}/${selectedPost.value}`)
+    const file = await api(`/repos/${OWNER}/${REPO}/contents/${contentDir.value}/${selectedPost.value}`)
     // 正确的 UTF-8 Base64 解码
     const bytes = Uint8Array.from(atob(file.content), c => c.charCodeAt(0))
     const raw = new TextDecoder().decode(bytes)
@@ -382,7 +398,7 @@ function toBase64(str) {
 
 async function updatePostsIndex(newFileName) {
   try {
-    const indexPath = `${POSTS_DIR}/index.md`
+    const indexPath = `${contentDir.value}/index.md`
     const res = await fetch(`${BASE}/repos/${OWNER}/${REPO}/contents/${indexPath}`, {
       headers: { Authorization: `token ${token.value}`, Accept: 'application/vnd.github.v3+json' },
     })
@@ -448,15 +464,14 @@ async function updateSidebarConfig(displayName, fileName) {
     if (raw.includes(marker)) {
       updated = raw.replace(marker, `${linkLine}\n            ${marker}`)
     } else {
-      // 在 sidebar items 数组末尾插入 marker 和新链接
-      const sidebarMatch = raw.match(/(\/posts\/.*?items:\s*\[)([\s\S]*?)(\])/)
-      if (sidebarMatch) {
-        // 在最后一个 item 之后插入
-        updated = raw.replace(
-          /({ text: 'JavaScript 闭包详解'.*?},)/,
-          `$1\n            ${linkLine}\n            // AUTO_POSTS_END  // 新文章自动追加到此标记上方`
-        )
-      }
+      // 在 sidebar 对应 section 插入新链接
+    const sidebarSection = editMode.value === 'posts' ? '/posts/' : '/guide/'
+    if (raw.includes(`'${sidebarSection}':`)) {
+      updated = raw.replace(marker, `${linkLine}\n            ${marker}`)
+    } else {
+      // fallback: 找 AUTO_POSTS_END 标记
+      updated = raw.replace(marker, `${linkLine}\n            ${marker}`)
+    }
     }
 
     if (updated && updated !== raw) {
@@ -481,7 +496,7 @@ async function publish() {
     let name = selectedPost.value === '__new__'
       ? (newFileName.value.trim().replace(/\.md$/, '') || 'untitled') + '.md'
       : selectedPost.value
-    const filePath = `${POSTS_DIR}/${name}`; const sha = await getSha(filePath)
+    const filePath = `${contentDir.value}/${name}`; const sha = await getSha(filePath)
     const markdown = buildMarkdown()
     await api(`/repos/${OWNER}/${REPO}/contents/${filePath}`, {
       method: 'PUT',
@@ -592,6 +607,15 @@ onMounted(async () => {
 /* 顶栏 */
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
 .topbar-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+
+/* 模式切换 */
+.mode-switch { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; flex-shrink: 0; }
+.mode-switch button {
+  padding: 7px 14px; border: none; background: transparent; font-size: 13px; font-weight: 500;
+  cursor: pointer; color: var(--text-secondary); transition: all 0.15s;
+}
+.mode-switch button:first-child { border-right: 1px solid var(--border); }
+.mode-switch button.active { background: var(--brand); color: #fff; }
 .post-select {
   padding: 7px 12px; border: 1.5px solid var(--border); border-radius: var(--radius);
   font-size: 13px; background: var(--surface); color: var(--text); min-width: 150px; cursor: pointer;

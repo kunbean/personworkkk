@@ -44,6 +44,7 @@ export default defineConfig({
             { text: '主题定制', link: '/guide/theme' },
             { text: '部署流程', link: '/guide/deploy' },
             { text: '更新日志', link: '/guide/changelog' },
+            // AUTO_POSTS_END  // 新文档自动追加到此标记上方
           ],
         },
       ],

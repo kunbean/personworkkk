@@ -8,11 +8,17 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
-  "keywords": ["blog", "vitepress", "tech"],
+  "keywords": [
+    "blog",
+    "vitepress",
+    "tech"
+  ],
   "author": "",
-  "license": "MIT"
-,
+  "license": "MIT",
   "devDependencies": {
     "vitepress": "^1.6.4"
+  },
+  "dependencies": {
+    "marked": "^18.0.5"
   }
 }

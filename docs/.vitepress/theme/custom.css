@@ -1,0 +1,395 @@
+/* ========== 🌸 少女多巴胺主题 - Dopamine Girl Theme ========== */
+
+:root {
+  /* 主色调 */
+  --vp-c-brand-1: #ff6b9d;
+  --vp-c-brand-2: #ff85b3;
+  --vp-c-brand-3: #ff4d8a;
+  --vp-c-brand-soft: rgba(255, 107, 157, 0.14);
+
+  /* 背景 */
+  --vp-c-bg: #fff5f9;
+  --vp-c-bg-alt: #ffe4f0;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #fff0f6;
+
+  /* 文字 */
+  --vp-c-text-1: #4a2040;
+  --vp-c-text-2: #7a5068;
+  --vp-c-text-3: #a08090;
+
+  /* 边框 */
+  --vp-c-border: #f9c8d8;
+  --vp-c-divider: #f9c8d8;
+  --vp-c-gutter: #ffe4f0;
+
+  /* 自定义 */
+  --pink-gradient: linear-gradient(135deg, #ff6b9d, #c084fc, #f9a8d4);
+  --purple-gradient: linear-gradient(135deg, #c084fc, #a78bfa, #818cf8);
+  --sunset-gradient: linear-gradient(135deg, #ff6b9d, #f97316, #fbbf24);
+  --card-shadow: 0 4px 20px rgba(255, 107, 157, 0.15);
+  --card-hover-shadow: 0 8px 30px rgba(255, 107, 157, 0.25);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+}
+
+/* 暗色模式 - 保持可爱但降低亮度 */
+.dark {
+  --vp-c-brand-1: #ff85b3;
+  --vp-c-brand-2: #ff9ec4;
+  --vp-c-brand-3: #ff6b9d;
+  --vp-c-brand-soft: rgba(255, 133, 179, 0.16);
+  --vp-c-bg: #2d1b2e;
+  --vp-c-bg-alt: #362036;
+  --vp-c-bg-elv: #3d2840;
+  --vp-c-bg-soft: #332034;
+  --vp-c-text-1: #f0d8e8;
+  --vp-c-text-2: #d0b0c8;
+  --vp-c-text-3: #a08098;
+  --vp-c-border: #5a3058;
+  --vp-c-divider: #5a3058;
+  --vp-c-gutter: #362036;
+  --card-shadow: 0 4px 20px rgba(192, 132, 252, 0.12);
+  --card-hover-shadow: 0 8px 30px rgba(192, 132, 252, 0.2);
+}
+
+/* ========== 🌟 导航栏 ========== */
+.VPNav {
+  background: rgba(255, 245, 249, 0.85) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--vp-c-border);
+}
+
+.VPNavBarTitle .title {
+  background: var(--pink-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+.VPNavBarMenuLink:hover {
+  color: var(--vp-c-brand-1) !important;
+}
+
+.VPNavBarMenuLink.active {
+  color: var(--vp-c-brand-1) !important;
+  position: relative;
+}
+
+.VPNavBarMenuLink.active::after {
+  content: '💖';
+  position: absolute;
+  top: -8px;
+  right: -12px;
+  font-size: 10px;
+}
+
+/* ========== 🏠 首页 Hero ========== */
+.VPHero .name {
+  background: var(--pink-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em;
+  animation: shimmer 3s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.VPHero .text {
+  color: #c084fc !important;
+  font-weight: 600;
+}
+
+.VPHero .tagline {
+  color: var(--vp-c-text-2) !important;
+  font-size: 1.2em;
+}
+
+/* Hero 按钮 */
+.VPHero .actions .VPButton.brand {
+  background: var(--pink-gradient) !important;
+  border: none !important;
+  border-radius: 50px !important;
+  padding: 0 28px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.VPHero .actions .VPButton.brand:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(255, 107, 157, 0.4);
+}
+
+.VPHero .actions .VPButton.alt {
+  border: 2px solid #c084fc !important;
+  border-radius: 50px !important;
+  color: #c084fc !important;
+  padding: 0 28px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.VPHero .actions .VPButton.alt:hover {
+  background: rgba(192, 132, 252, 0.08) !important;
+  transform: translateY(-3px) scale(1.03);
+}
+
+/* ========== ✨ Features 卡片 ========== */
+.VPFeatures .VPFeature {
+  background: var(--vp-c-bg-elv) !important;
+  border: 1px solid var(--vp-c-border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.VPFeatures .VPFeature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--pink-gradient);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.VPFeatures .VPFeature:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-hover-shadow);
+  border-color: #ff85b3 !important;
+}
+
+.VPFeatures .VPFeature:hover::before {
+  opacity: 1;
+}
+
+.VPFeatures .VPFeature .icon {
+  font-size: 2rem !important;
+}
+
+/* ========== 📄 内容区 ========== */
+.vp-doc h1 {
+  background: var(--pink-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 900;
+}
+
+.vp-doc h2 {
+  color: #c084fc;
+  border-bottom: 2px solid #f9c8d8;
+  padding-bottom: 0.3em;
+}
+
+.vp-doc h3 {
+  color: #ff85b3;
+}
+
+.vp-doc a {
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.vp-doc a:hover {
+  color: #ff4d8a;
+}
+
+.vp-doc a:not(.header-anchor)::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--pink-gradient);
+  transition: width 0.3s;
+}
+
+.vp-doc a:not(.header-anchor):hover::after {
+  width: 100%;
+}
+
+/* 代码块 */
+.vp-doc div[class*='language-'] {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--vp-c-border) !important;
+}
+
+.vp-doc code {
+  color: #ff6b9d;
+  background: rgba(255, 107, 157, 0.08);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+/* 表格 */
+.vp-doc table {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.vp-doc th {
+  background: var(--pink-gradient) !important;
+  color: white !important;
+  font-weight: 700;
+}
+
+.vp-doc tr:nth-child(even) {
+  background: rgba(255, 107, 157, 0.04);
+}
+
+/* Blockquote */
+.vp-doc blockquote {
+  border-left: 4px solid #ff85b3 !important;
+  background: rgba(255, 107, 157, 0.06);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 12px 20px;
+}
+
+/* ========== 📑 侧边栏 ========== */
+.VPSidebar {
+  background: var(--vp-c-bg-soft) !important;
+}
+
+.VPSidebarItem.is-active > .item .link > .text {
+  color: var(--vp-c-brand-1) !important;
+  font-weight: 700;
+}
+
+.VPSidebarItem .link:hover .text {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* ========== 🔍 搜索框 ========== */
+.VPNavBarSearch button,
+.DocSearch-Button {
+  border-radius: 50px !important;
+  border: 2px solid var(--vp-c-border) !important;
+  background: var(--vp-c-bg-soft) !important;
+  transition: all 0.3s;
+}
+
+.VPNavBarSearch button:hover,
+.DocSearch-Button:hover {
+  border-color: #ff85b3 !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+}
+
+/* ========== 📝 编辑链接按钮 ========== */
+.edit-link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--pink-gradient);
+  color: white !important;
+  border: none;
+  border-radius: 50px;
+  padding: 8px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.25);
+  text-decoration: none !important;
+}
+
+.edit-link-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.35);
+}
+
+/* ========== 💬 页脚 ========== */
+.VPFooter {
+  border-top: 1px solid var(--vp-c-border) !important;
+  background: var(--vp-c-bg-soft) !important;
+}
+
+/* ========== 🎯 滚动条 ========== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vp-c-bg-soft);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff85b3, #c084fc);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff6b9d, #a78bfa);
+}
+
+/* ========== 🪄 文章列表特殊样式 ========== */
+.post-list-item {
+  background: var(--vp-c-bg-elv);
+  border: 1px solid var(--vp-c-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.post-list-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--pink-gradient);
+  border-radius: 0 2px 2px 0;
+}
+
+.post-list-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--card-hover-shadow);
+}
+
+/* ========== 📱 响应式 ========== */
+@media (max-width: 768px) {
+  .VPHero .name {
+    font-size: 2.5rem !important;
+  }
+}
+
+/* ========== 🌸 可爱装饰 ========== */
+.VPHero .container::after {
+  content: '🌸 ✨ 🎀 💖 🦋 🌈 ⭐';
+  display: block;
+  text-align: center;
+  font-size: 1.5rem;
+  margin-top: 1rem;
+  letter-spacing: 0.5rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}

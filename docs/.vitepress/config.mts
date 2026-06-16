@@ -11,9 +11,10 @@ export default defineConfig({
   themeConfig: {
     // 导航栏
     nav: [
-      { text: '首页', link: '/' },
-      { text: '文章', link: '/posts/' },
-      { text: '关于我', link: '/about' },
+      { text: '🌸 首页', link: '/' },
+      { text: '📝 文章', link: '/posts/' },
+      { text: '✏️ 写文章', link: '/editor' },
+      { text: '💖 关于我', link: '/about' },
     ],
 
     // 侧边栏

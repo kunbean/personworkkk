@@ -2,31 +2,22 @@
 layout: home
 
 hero:
-  name: "我的技术成长记录"
+  name: "技术成长记录"
   text: "记录学习与成长的每一步"
-  tagline: 🌸 用最可爱的博客，记录最酷的代码 🌸
-  image:
-    src: /logo.svg
-    alt: 技术博客
+  tagline: 构建知识体系，让每一段学习都有迹可循
   actions:
     - theme: brand
-      text: 📝 开始阅读
+      text: 阅读文章
       link: /posts/
     - theme: alt
-      text: ✏️ 写文章
+      text: 写文章
       link: /editor
-    - theme: alt
-      text: 💖 关于我
-      link: /about
 
 features:
-  - icon: ✏️
-    title: 在线编辑
-    details: 不用装任何工具，打开网页就能写文章，写完一键发布上线！
-  - icon: 🎀
-    title: 少女心配色
-    details: 多巴胺粉色主题，让你在甜甜的氛围中快乐学习
-  - icon: 🚀
-    title: 自动部署
-    details: 写完点发布，GitHub Actions 自动构建，一分钟内全网上线
+  - title: 在线编辑
+    details: 浏览器内直接编写 Markdown，实时预览，一键发布到线上
+  - title: 知识归档
+    details: 按时间整理技术文章，支持标签分类与全文搜索
+  - title: 自动部署
+    details: GitHub Actions 自动构建部署，推送即上线
 ---
